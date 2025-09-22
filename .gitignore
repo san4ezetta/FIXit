@@ -1,0 +1,33 @@
+# --- Go build ---
+/bin/
+/out/
+/dist/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Go modules
+/go.sum
+/vendor/
+
+# IDE: JetBrains GoLand
+.idea/
+*.iml
+
+# IDE: VSCode
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
