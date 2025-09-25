@@ -1,3 +1,2 @@
 # FIXit
-## my uni project
-### https://docs.google.com/document/d/1Wvc9ARoyPW_2acoSbuQyYXDhjz3sbatAIIW473CW6Ps/edit?usp=sharing
+## Веб-приложение для ВУЗа: "Система конроля по работе со строительными объектами" 
