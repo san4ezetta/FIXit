@@ -1,12 +1,22 @@
-package main
+package handlers
 
 import (
+	"FIXit/backend/internal/repository"
 	"net/http"
 	"strconv"
 
-	"FIXit/repository"
 	"github.com/gin-gonic/gin"
 )
+
+var userStore *repository.UserStore
+
+func getUserStore() *repository.UserStore {
+	if userStore == nil {
+		userStore = repository.NewUserStore()
+		return userStore
+	}
+	return userStore
+}
 
 type RegisterRequest struct {
 	Name       string `json:"name" binding:"required,min=2,max=50,alpha"`
@@ -24,7 +34,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = userStore.Create(repository.User{
+	err = getUserStore().Create(repository.User{
 		Name:       req.Name,
 		Surname:    req.Surname,
 		Patronymic: req.Patronymic,
@@ -46,19 +56,6 @@ func User(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	user, _ := userStore.FindById(int(id))
+	user, _ := getUserStore().FindById(int(id))
 	c.JSON(http.StatusOK, user)
-}
-
-var userStore *repository.UserStore
-
-func main() {
-	userStore = repository.NewUserStore()
-	server := gin.Default()
-	server.POST("/register", Register)
-	server.GET("/user/:id", User)
-	err := server.Run(":8080")
-	if err != nil {
-		return
-	}
 }
