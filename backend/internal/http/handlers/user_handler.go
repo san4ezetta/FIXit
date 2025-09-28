@@ -1,18 +1,20 @@
 package handlers
 
 import (
+	"FIXit/backend/internal/config"
 	"FIXit/backend/internal/repository"
+	"context"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-var userStore *repository.UserStore
+var userStore *repository.UserRepository
 
-func getUserStore() *repository.UserStore {
+func getUserStore(cfg *config.Config) *repository.UserRepository {
 	if userStore == nil {
-		userStore = repository.NewUserStore()
+		userStore = repository.NewUserRepository(cfg)
 		return userStore
 	}
 	return userStore
@@ -28,13 +30,15 @@ type RegisterRequest struct {
 }
 
 func Register(c *gin.Context) {
+	cfg := c.MustGet("config").(*config.Config)
 	var req RegisterRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = getUserStore().Create(repository.User{
+	context := context.Background()
+	err = getUserStore(cfg).Create(context, repository.User{
 		Name:       req.Name,
 		Surname:    req.Surname,
 		Patronymic: req.Patronymic,
@@ -50,12 +54,15 @@ func Register(c *gin.Context) {
 }
 
 func User(c *gin.Context) {
+	cfg := c.MustGet("config").(*config.Config)
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil || id <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	user, _ := getUserStore().FindById(int(id))
+	context := context.Background()
+
+	user, _ := getUserStore(cfg).FindById(context, int(id))
 	c.JSON(http.StatusOK, user)
 }

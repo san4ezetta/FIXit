@@ -1,12 +1,38 @@
 package repository
 
+import (
+	"FIXit/backend/internal/config"
+	"context"
+	"database/sql"
+	_ "github.com/jackc/pgx/v5/stdlib"
+)
+
 type User struct {
-	Id         int
+	ID         int
 	Name       string
 	Surname    string
 	Patronymic string
 	Email      string
 	Password   string
+}
+
+type UserRepository struct {
+	db *sql.DB
+}
+
+func NewUserRepository(cfg *config.Config) *UserRepository {
+	db, err := sql.Open("pgx", cfg.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+
+	return &UserRepository{
+		db: db,
+	}
+}
+
+func getUserRepository() *UserRepository {
+	return &UserRepository{}
 }
 
 type UserStore struct {
@@ -21,13 +47,28 @@ func NewUserStore() *UserStore {
 	}
 }
 
-func (s *UserStore) Create(user User) error {
-	user.Id = s.nextId
-	s.users[s.nextId] = &user
-	s.nextId++
-	return nil
+func (s *UserRepository) Create(ctx context.Context, user User) error {
+	const q = `INSERT INTO users (name, surname, patronymic, email, password)
+               VALUES ($1, $2, $3, $4, $5)`
+
+	stmt, err := s.db.PrepareContext(ctx, q)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx,
+		user.Name, user.Surname, user.Patronymic, user.Email, user.Password)
+	return err
 }
 
-func (s *UserStore) FindById(id int) (*User, error) {
-	return s.users[id], nil
+func (s *UserRepository) FindById(ctx context.Context, id int) (*User, error) {
+	q := `SELECT id, name, surname FROM users WHERE id = $1 LIMIT 1`
+	var user User
+	err := s.db.QueryRowContext(ctx, q, id).Scan(&user.ID, &user.Name, &user.Surname)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }

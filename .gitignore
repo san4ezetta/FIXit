@@ -31,3 +31,6 @@
 # OS-specific
 .DS_Store
 Thumbs.db
+
+/docker/pgdata/
+.env
