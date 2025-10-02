@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"github.com/joho/godotenv"
+	"os"
+)
 
 type Config struct {
 	Addr        string
@@ -8,14 +11,9 @@ type Config struct {
 }
 
 func Load() Config {
+	_ = godotenv.Load(".env")
 	addr := os.Getenv("ADDR")
-	if addr == "" {
-		addr = ":8080"
-	}
 	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		dsn = "postgres://fixit:secret@localhost:5438/fixit?sslmode=disable"
-	}
 	return Config{
 		Addr:        addr,
 		DatabaseURL: dsn,
