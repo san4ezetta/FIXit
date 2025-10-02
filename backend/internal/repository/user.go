@@ -72,3 +72,14 @@ func (s *UserRepository) FindById(ctx context.Context, id int) (*User, error) {
 
 	return &user, nil
 }
+
+func (s *UserRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
+	q := `SELECT id, name, surname, patronymic, email, password FROM users WHERE email = $1 LIMIT 1`
+	var user User
+	err := s.db.QueryRowContext(ctx, q, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Patronymic, &user.Email, &user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

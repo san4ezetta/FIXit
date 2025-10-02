@@ -4,10 +4,12 @@ import (
 	"FIXit/backend/internal/config"
 	"FIXit/backend/internal/repository"
 	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
+	"time"
 )
 
 var userStore *repository.UserRepository
@@ -38,12 +40,14 @@ func Register(c *gin.Context) {
 		return
 	}
 	context := context.Background()
+
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	err = getUserStore(cfg).Create(context, repository.User{
 		Name:       req.Name,
 		Surname:    req.Surname,
 		Patronymic: req.Patronymic,
 		Email:      req.Email,
-		Password:   req.Password,
+		Password:   string(encryptedPassword),
 	})
 	if err != nil {
 		return
@@ -53,7 +57,7 @@ func Register(c *gin.Context) {
 	})
 }
 
-func User(c *gin.Context) {
+func GetUserById(c *gin.Context) {
 	cfg := c.MustGet("config").(*config.Config)
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 32)
@@ -61,8 +65,62 @@ func User(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	context := context.Background()
+	ctx := context.Background()
 
-	user, _ := getUserStore(cfg).FindById(context, int(id))
+	user, _ := getUserStore(cfg).FindById(ctx, int(id))
 	c.JSON(http.StatusOK, user)
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8,max=64"`
+}
+
+func Login(c *gin.Context) {
+	cfg := c.MustGet("config").(*config.Config)
+	var req LoginRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	user, err := getUserStore(cfg).FindByEmail(ctx, req.Email)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not found",
+		})
+		return
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid password",
+		})
+		return
+	}
+
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"sub": user.ID,
+		"iat": now.Unix(),
+		"exp": now.Add(cfg.JWTTTL).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(cfg.JWTSecret))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "token creation failed",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": signed,
+		"user": gin.H{
+			"id":    user.ID,
+			"email": user.Email,
+		},
+	})
 }
