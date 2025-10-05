@@ -35,3 +35,6 @@ Thumbs.db
 /docker/pgdata/
 .env
 backend/tmp/
+
+frontend/dist/
+frontend/node_modules/
