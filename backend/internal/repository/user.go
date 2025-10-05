@@ -4,6 +4,7 @@ import (
 	"FIXit/backend/internal/config"
 	"context"
 	"database/sql"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -14,6 +15,8 @@ type User struct {
 	Patronymic string
 	Email      string
 	Password   string
+	RoleID     int
+	IsActive   bool
 }
 
 type UserRepository struct {
@@ -48,8 +51,8 @@ func NewUserStore() *UserStore {
 }
 
 func (s *UserRepository) Create(ctx context.Context, user User) error {
-	const q = `INSERT INTO users (name, surname, patronymic, email, password)
-               VALUES ($1, $2, $3, $4, $5)`
+	const q = `INSERT INTO users (name, surname, patronymic, email, password, role_id, is_active)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	stmt, err := s.db.PrepareContext(ctx, q)
 	if err != nil {
@@ -58,7 +61,14 @@ func (s *UserRepository) Create(ctx context.Context, user User) error {
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
-		user.Name, user.Surname, user.Patronymic, user.Email, user.Password)
+		user.Name,
+		user.Surname,
+		user.Patronymic,
+		user.Email,
+		user.Password,
+		user.RoleID,
+		user.IsActive,
+	)
 	return err
 }
 

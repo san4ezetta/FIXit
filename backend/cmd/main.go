@@ -4,7 +4,6 @@ import (
 	"FIXit/backend/internal/config"
 	"FIXit/backend/internal/http/handlers"
 	"FIXit/backend/internal/http/middleware"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,9 +18,13 @@ func main() {
 	cfg := config.Load()
 	server := gin.Default()
 	server.Use(WithConfig(cfg))
-	server.POST("/register", handlers.Register)
-	server.GET("/user/:id", middleware.NewAuth(cfg.JWTSecret).RequireAuth(), handlers.GetUserById)
-	server.POST("/login", handlers.Login)
+	server.Use(middleware.Responder())
+	api := server.Group("/api")
+	{
+		api.POST("/register", handlers.Register)
+		api.GET("/user/:id", middleware.NewAuth(cfg.JWTSecret).RequireAuth(), handlers.GetUserById)
+		api.POST("/login", handlers.Login)
+	}
 	err := server.Run(cfg.Addr)
 	if err != nil {
 		return

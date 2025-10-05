@@ -1,11 +1,10 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-
+	"FIXit/backend/internal/apierr"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"strings"
 )
 
 type Auth struct {
@@ -27,13 +26,13 @@ func (m *Auth) RequireAuth() gin.HandlerFunc {
 		})
 
 		if err != nil || !parsed.Valid {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			AbortErr(c, apierr.Wrap(apierr.ErrUnauthorized, err))
 			return
 		}
 
 		id, ok := claims["sub"]
 		if !ok {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			AbortErr(c, apierr.Wrap(apierr.ErrUnauthorized, err))
 			return
 		}
 

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"FIXit/backend/internal/apierr"
 	"FIXit/backend/internal/config"
+	"FIXit/backend/internal/http/middleware"
 	"FIXit/backend/internal/repository"
 	"context"
 	"github.com/gin-gonic/gin"
@@ -36,7 +38,7 @@ func Register(c *gin.Context) {
 	var req RegisterRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrInvalidJSON, err))
 		return
 	}
 	context := context.Background()
@@ -48,8 +50,11 @@ func Register(c *gin.Context) {
 		Patronymic: req.Patronymic,
 		Email:      req.Email,
 		Password:   string(encryptedPassword),
+		RoleID:     1,
+		IsActive:   true,
 	})
 	if err != nil {
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrInternal, err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -62,7 +67,7 @@ func GetUserById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrBadRequest, err))
 		return
 	}
 	ctx := context.Background()
@@ -81,22 +86,18 @@ func Login(c *gin.Context) {
 	var req LoginRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrInvalidJSON, err))
 		return
 	}
 	ctx := context.Background()
 	user, err := getUserStore(cfg).FindByEmail(ctx, req.Email)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "user not found",
-		})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrUserNotFound, err))
 		return
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "invalid password",
-		})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrInvalidPassword, err))
 		return
 	}
 
@@ -106,13 +107,11 @@ func Login(c *gin.Context) {
 		"iat": now.Unix(),
 		"exp": now.Add(cfg.JWTTTL).Unix(),
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(cfg.JWTSecret))
+
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "token creation failed",
-		})
+		middleware.AbortErr(c, apierr.Wrap(apierr.ErrTokenCreation, err))
 		return
 	}
 
