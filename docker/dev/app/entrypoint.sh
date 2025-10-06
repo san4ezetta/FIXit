@@ -9,6 +9,8 @@ if [ -d "/app/backend/migrations" ]; then
   goose -dir /app/backend/migrations postgres "$DATABASE_URL" up || true
 fi
 
+go mod tidy
+
 # Стартуем live-reload
 echo "Starting air..."
 cd /app/backend
