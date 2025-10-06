@@ -6,3 +6,12 @@
      0 1 1 4 0v2h-4Z"/>
   </svg>
 </template>
+
+<style scoped>
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+</style>

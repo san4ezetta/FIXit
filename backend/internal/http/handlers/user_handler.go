@@ -25,9 +25,9 @@ func getUserStore(cfg *config.Config) *repository.UserRepository {
 }
 
 type RegisterRequest struct {
-	Name       string `json:"name" binding:"required,min=2,max=50,alpha"`
-	Surname    string `json:"surname" binding:"required,min=2,max=50,alpha"`
-	Patronymic string `json:"patronymic" binding:"omitempty,min=2,max=50,alpha"`
+	Name       string `json:"name" binding:"required,min=2,max=50,alphaunicode"`
+	Surname    string `json:"surname" binding:"required,min=2,max=50,alphaunicode"`
+	Patronymic string `json:"patronymic" binding:"omitempty,min=2,max=50,alphaunicode"`
 	Email      string `json:"email" binding:"required,email"`
 	Password   string `json:"password" binding:"required,min=8,max=64"`
 	Password2  string `json:"password2" binding:"required,eqfield=Password"`

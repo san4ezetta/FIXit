@@ -5,3 +5,12 @@
      2 0 0 0-2-2Zm0 4-8 5L4 8V6l8 5 8-5v2Z"/>
   </svg>
 </template>
+
+<style scoped>
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+</style>
