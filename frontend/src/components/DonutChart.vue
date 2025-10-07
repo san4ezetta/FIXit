@@ -14,9 +14,7 @@
           />
         </template>
       </g>
-      <!-- внутренняя дырка -->
       <circle cx="50" cy="50" r="30" fill="#1d2229"/>
-      <!-- центр-лейбл -->
       <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" class="label">
         {{ total }}
       </text>
@@ -35,12 +33,11 @@
 <script setup>
 import { computed } from 'vue'
 const props = defineProps({
-  segments: { type: Array, required: true }, // [{label,color,value}]
+  segments: { type: Array, required: true },
   total: { type: Number, default: 0 },
   size: { type: Number, default: 240 }
 })
 
-// окружность = 2πr ≈ 2*3.14159*38 ≈ 238.7
 const circ = 238.7
 const normalized = computed(() => {
   const sum = props.segments.reduce((a,b)=>a + (b.value||0), 0) || 1

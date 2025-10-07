@@ -57,10 +57,8 @@ async function submitLogin() {
       setMsg('error', text); return
     }
     const data = await res.json()
-    // сохраняем токен и id
     localStorage.setItem('token', data.token)
     localStorage.setItem('user_id', String(data.user?.id || ''))
-    // редирект на личную страницу
     await router.push({ name: 'user', params: { id: data.user.id } })
   } catch (e) {
     setMsg('error', 'Что-то пошло не так')

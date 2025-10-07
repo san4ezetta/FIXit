@@ -3,7 +3,6 @@
     <AppHeader/>
 
     <main class="container">
-      <!-- роль -->
       <div class="role-tabs">
         <button class="rtab active">Инженер</button>
         <button class="rtab">Менеджер</button>
@@ -12,7 +11,6 @@
 
       <h1 class="h1">Личный кабинет</h1>
 
-      <!-- KPI -->
       <section class="kpis">
         <KpiCard title="Открытые Дефекты" :value="32" caption="всего по проектам">
           <template #icon>🟠</template>
@@ -25,7 +23,6 @@
         </KpiCard>
       </section>
 
-      <!-- Диаграмма + обзор -->
       <section class="panels">
         <div class="panel">
           <div class="panel-title">Распределение Дефектов</div>
@@ -45,7 +42,6 @@
         </div>
       </section>
 
-      <!-- Проекты -->
       <h2 class="h2">Список Активных Проектов</h2>
       <section class="projects">
         <ProjectCard name="ЖК 'Солнечный'" status="Активен" defects="15 / 120"/>
@@ -64,13 +60,11 @@ import KpiCard from '../components/KpiCard.vue'
 import DonutChart from '../components/DonutChart.vue'
 import ProjectCard from '../components/ProjectCard.vue'
 
-// псевдослучайные данные диаграммы
 const seed = Math.random()
-function rnd(n){ return Math.floor((Math.random()+0.2) * n) } // чуть “правдоподобнее”
+function rnd(n){ return Math.floor((Math.random()+0.2) * n) }
 const base = [rnd(10)+10, rnd(10)+10, rnd(10)+10, rnd(10)+10]
 const sum = base.reduce((a,b)=>a+b,0)
-const scaled = base.map(v => Math.round(v * (100/sum))) // к ~100
-// нормализуем, чтобы сумма = totalDefects
+const scaled = base.map(v => Math.round(v * (100/sum)))
 const totalDefects = 100
 const adjust = totalDefects - scaled.reduce((a,b)=>a+b,0)
 scaled[0] += adjust
